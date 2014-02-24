@@ -38,9 +38,9 @@ static int lua_database_open(lua_State *L)
   const char *filename;
   if (!lua_isstring(L, -1))
   {
-    lua_pushnil(L);
-    lua_pushliteral(L, "Filename is invalid.");
-    return 2;
+    lua_pushliteral(L, "Invalid parameters.");
+    lua_error(L);
+    return 0;
   }
   else
   {
@@ -81,13 +81,10 @@ static int lua_database_gc(lua_State *L)
   if (!lua_isdatabase(L, 1))
     return 0;
   db = lua_touserdata(L, 1);
-  if (db->status == SQLITE_OK)
-  {
-    /* Close database */
-    sqlite3_close_v2(db->connection);
-    db->status = -1;
-    db->connection = 0;
-  }
+  /* Close database */
+  sqlite3_close_v2(db->connection);
+  db->status = -1;
+  db->connection = 0;
   return 0;
 }
 
@@ -318,12 +315,10 @@ static int lua_statement_gc(lua_State *L)
   if (!lua_isstatement(L, 1))
     return 0;
   stmt = lua_touserdata(L, 1);
-  if (stmt->status == SQLITE_OK)
-  {
-    sqlite3_finalize(stmt->stmt);
-    stmt->status = -1;
-    stmt->stmt = STATEMENT_ERROR;
-  }
+  sqlite3_finalize(stmt->stmt);
+  stmt->status = -1;
+  stmt->stmt = 0;
+  stmt->step = STATEMENT_ERROR;
   return 0;
 }
 
